@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>3D Print Profit Tracker</title>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+    h2 { color: #007BFF; }
+    input, button { margin: 10px 0; padding: 8px; width: 100%; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h2>Smart 3D Print Profit Tracker</h2>
+
+  <label>Filament Used (grams):</label>
+  <input type="number" id="grams" min="0" required />
+
+  <label>Print Time (minutes):</label>
+  <input type="number" id="minutes" min="0" required />
+
+  <label>Selling Price (₹):</label>
+  <input type="number" id="sellingPrice" min="0" required />
+
+  <button onclick="addRecord()">Add Record</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Grams</th>
+        <th>Time (min)</th>
+        <th>Cost (₹)</th>
+        <th>Sold (₹)</th>
+        <th>Profit (₹)</th>
+      </tr>
+    </thead>
+    <tbody id="history"></tbody>
+  </table>
+
+  <script>
+    const FILAMENT_COST = 1.0; // ₹ per gram
+    const ELECTRICITY = 0.325; // ₹/hour
+    const MAINTENANCE = 1.33;  // ₹/hour
+    const RECOVERY = 50;       // ₹/hour
+    const NOZZLE_WEAR = 2;     // ₹/hour
+
+    let records = JSON.parse(localStorage.getItem("records")) || [];
+
+    function renderTable() {
+      const tbody = document.getElementById("history");
+      tbody.innerHTML = "";
+      records.forEach(r => {
+        const row = `<tr>
+          <td>${r.grams}</td>
+          <td>${r.minutes}</td>
+          <td>₹${r.cost.toFixed(2)}</td>
+          <td>₹${r.sell.toFixed(2)}</td>
+          <td style="color: ${r.profit >= 0 ? 'green' : 'red'};">₹${r.profit.toFixed(2)}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function addRecord() {
+      const grams = parseFloat(document.getElementById("grams").value);
+      const minutes = parseFloat(document.getElementById("minutes").value);
+      const sell = parseFloat(document.getElementById("sellingPrice").value);
+
+      const hours = minutes / 60;
+      const cost = 
+        grams * FILAMENT_COST +
+        hours * (ELECTRICITY + MAINTENANCE + RECOVERY + NOZZLE_WEAR);
+
+      const profit = sell - cost;
+      const entry = { grams, minutes, cost, sell, profit };
+
+      records.push(entry);
+      localStorage.setItem("records", JSON.stringify(records));
+      renderTable();
+
+      document.getElementById("grams").value = "";
+      document.getElementById("minutes").value = "";
+      document.getElementById("sellingPrice").value = "";
+    }
+
+    renderTable();
+  </script>
+</body>
+</html>
